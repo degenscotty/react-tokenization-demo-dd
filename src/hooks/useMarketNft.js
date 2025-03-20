@@ -82,6 +82,16 @@ export function useMarketNft() {
         chainId: CHAIN_ID,
     })
 
+    // Reset pending state when transaction is rejected or fails
+    useEffect(() => {
+        // When writeContract.isPending changes from true to false with no hash
+        // it means the transaction was rejected
+        if (!isWritePending && !hash && isPending) {
+            console.log("Transaction was rejected")
+            setIsPending(false)
+        }
+    }, [isWritePending, hash, isPending])
+
     // Read contract data
     const {
         data: tokenCounter,
@@ -156,7 +166,7 @@ export function useMarketNft() {
                 chainId: CHAIN_ID,
                 value,
             })
-            // Refetching will be handled by the useEffect
+            // Transaction state is now handled by the useEffect hooks above
         } catch (error) {
             console.error("Error buying fraction:", error)
             setIsPending(false)
@@ -173,7 +183,7 @@ export function useMarketNft() {
                 args: [tokenId, amount],
                 chainId: CHAIN_ID,
             })
-            // Refetching will be handled by the useEffect
+            // Transaction state is now handled by the useEffect hooks above
         } catch (error) {
             console.error("Error selling fraction:", error)
             setIsPending(false)
@@ -190,7 +200,7 @@ export function useMarketNft() {
                 args: [name, description, location, imageUri, fractions],
                 chainId: CHAIN_ID,
             })
-            // Refetching will be handled by the useEffect
+            // Transaction state is now handled by the useEffect hooks above
         } catch (error) {
             console.error("Error minting NFT:", error)
             setIsPending(false)

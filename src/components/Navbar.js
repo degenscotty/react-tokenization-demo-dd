@@ -10,19 +10,13 @@ function Navbar() {
     return (
         <nav
             style={{
-                backgroundColor: colors.background,
-                borderRadius: "10px",
-                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-                marginTop: "20px",
-                display: "grid",
-                gridTemplateColumns: "1fr auto",
-                maxWidth: "1200px",
-                margin: "20px auto",
-                padding: "10px 20px",
+                backgroundColor: colors.backgroundDark || colors.backgroundLight,
+                borderBottom: `1px solid ${colors.border}`,
+                boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
             }}
-            className="p-2 flex items-center"
+            className="py-4 w-full"
         >
-            <div className="container mx-4 w-full flex justify-between items-center max-w-full">
+            <div className="container mx-auto px-4 flex justify-between items-center">
                 <div className="flex items-baseline space-x-4">
                     <a
                         href="/"
@@ -34,12 +28,10 @@ function Navbar() {
                     <button
                         onClick={openModal}
                         style={{
-                            color: colors.accent,
-                            backgroundColor: "transparent",
-                            border: "none",
-                            cursor: "pointer",
+                            backgroundColor: colors.accent,
+                            color: "#FFFFFF",
                         }}
-                        className="text-sm font-medium px-3 py-2 rounded-md transition-colors hover:opacity-80"
+                        className="text-sm font-medium px-4 py-2 rounded-md transition-transform hover:scale-105 shadow-md"
                     >
                         Create NFT
                     </button>
@@ -55,9 +47,14 @@ function Navbar() {
                         label="Connect Wallet"
                     />
                     <button
-                        style={{ color: colors.text }}
+                        style={{
+                            backgroundColor: isDarkMode
+                                ? "rgba(50, 50, 60, 0.4)"
+                                : "rgba(240, 240, 250, 0.7)",
+                            color: colors.text,
+                        }}
                         onClick={toggleDarkMode}
-                        className="p-2 text-sm"
+                        className="p-2 text-sm rounded-md shadow-sm transition-all hover:shadow"
                     >
                         {isDarkMode ? "🌞 Light Mode" : "🌙 Dark Mode"}
                     </button>

@@ -88,21 +88,30 @@ const NFTItem = ({
     }, [maxAvailable, quantity])
 
     return (
-        <div className="flex space-x-4 w-full mb-8">
-            <NFTDisplay nftData={nftData} loading={loading} colors={colors} />
-            <SalesInfo
-                colors={colors}
-                fractionalData={fractionalData}
-                quantity={quantity}
-                handleBuyQuantityChange={handleBuyQuantityChange}
-                maxAvailable={maxAvailable}
-                buyFraction={buyFraction}
-                sellFraction={sellFraction}
-                tokenId={tokenId}
-                price={price}
-                isPending={isPending}
-                loading={loading}
-            />
+        <div
+            className="grid grid-cols-1 lg:grid-cols-3 gap-4 transition-all duration-300 transform hover:translate-y-[-4px]"
+            style={{
+                opacity: loading ? 0.8 : 1,
+            }}
+        >
+            <div className="lg:col-span-2">
+                <NFTDisplay nftData={nftData} loading={loading} colors={colors} />
+            </div>
+            <div className="lg:col-span-1">
+                <SalesInfo
+                    colors={colors}
+                    fractionalData={fractionalData}
+                    quantity={quantity}
+                    handleBuyQuantityChange={handleBuyQuantityChange}
+                    maxAvailable={maxAvailable}
+                    buyFraction={buyFraction}
+                    sellFraction={sellFraction}
+                    tokenId={tokenId}
+                    price={price}
+                    isPending={isPending}
+                    loading={loading}
+                />
+            </div>
         </div>
     )
 }

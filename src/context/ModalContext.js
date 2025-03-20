@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from "react"
+import React, { createContext, useContext, useState, useEffect } from "react"
 import { useMarketNft } from "../hooks/useMarketNft"
 
 const ModalContext = createContext()
@@ -14,7 +14,7 @@ export const ModalProvider = ({ children }) => {
         fractions: "100", // Default value for fractions
     })
 
-    const { mintNft, isPending } = useMarketNft()
+    const { mintNft, isPending, isConfirmed } = useMarketNft()
 
     const openModal = () => setIsModalOpen(true)
     const closeModal = () => setIsModalOpen(false)
@@ -27,25 +27,9 @@ export const ModalProvider = ({ children }) => {
         }))
     }
 
-    const handleSubmit = async (e) => {
-        e.preventDefault()
-        console.log("Form submitted:", formData)
-
-        setIsSubmitting(true)
-
-        try {
-            // Call the mintNft function
-            await mintNft(
-                formData.name,
-                formData.description,
-                formData.location,
-                formData.imageUrl,
-                Number(formData.fractions),
-            )
-
-            // Close modal immediately, the transaction is in progress
-            closeModal()
-
+    // Close modal and reset form when transaction is confirmed
+    useEffect(() => {
+        if (isConfirmed && isSubmitting) {
             // Reset form data
             setFormData({
                 name: "",
@@ -54,10 +38,32 @@ export const ModalProvider = ({ children }) => {
                 imageUrl: "",
                 fractions: "100",
             })
+            setIsSubmitting(false)
+            closeModal()
+        }
+    }, [isConfirmed])
+
+    const handleSubmit = async (e) => {
+        e.preventDefault()
+        console.log("Form submitted:", formData)
+
+        setIsSubmitting(true)
+
+        try {
+            // Call the mintNft function - the modal stays open while transaction is processing
+            await mintNft(
+                formData.name,
+                formData.description,
+                formData.location,
+                formData.imageUrl,
+                Number(formData.fractions),
+            )
+
+            // Don't close modal here - it will be closed by the useEffect when isConfirmed becomes true
         } catch (error) {
             console.error("Error minting NFT:", error)
-        } finally {
             setIsSubmitting(false)
+            // Keep modal open on error so user can try again
         }
     }
 

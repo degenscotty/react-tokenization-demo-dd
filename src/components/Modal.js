@@ -1,10 +1,26 @@
 import React from "react"
 import { useTheme } from "../context/ThemeContext"
+import { useMarketNft } from "../hooks/useMarketNft"
 
 const Modal = ({ isOpen, onClose, onSubmit, formData, handleInputChange, isSubmitting }) => {
     const { colors } = useTheme()
+    const { isPending, isConfirmed } = useMarketNft()
 
     if (!isOpen) return null
+
+    // Transaction status message
+    const getStatusMessage = () => {
+        if (isSubmitting && isPending) {
+            return "Transaction in progress... Please confirm in your wallet and wait for confirmation."
+        } else if (isSubmitting && isConfirmed) {
+            return "Transaction confirmed! Your NFT has been created."
+        } else if (isSubmitting) {
+            return "Preparing transaction..."
+        }
+        return null
+    }
+
+    const statusMessage = getStatusMessage()
 
     return (
         <div
@@ -40,6 +56,22 @@ const Modal = ({ isOpen, onClose, onSubmit, formData, handleInputChange, isSubmi
                 >
                     Create NFT
                 </h2>
+
+                {statusMessage && (
+                    <div
+                        style={{
+                            padding: "10px",
+                            marginBottom: "15px",
+                            backgroundColor: colors.accent,
+                            color: "white",
+                            borderRadius: "5px",
+                            textAlign: "center",
+                        }}
+                    >
+                        {statusMessage}
+                    </div>
+                )}
+
                 <form onSubmit={onSubmit}>
                     <div className="mb-3">
                         <input
