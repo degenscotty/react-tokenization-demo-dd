@@ -1,56 +1,86 @@
-import { useReadContract, useWriteContract } from "wagmi"
+import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi"
 import { MarketNftContractABI, CONTRACT_ADDRESS, CHAIN_ID } from "../contract/contractConfig"
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
+
+// Move the token data hook outside to avoid recreation
+export function useTokenData(tokenId, account, isConfirmed) {
+    const [shouldRefetch, setShouldRefetch] = useState(false)
+
+    const {
+        data: tokenURI,
+        isLoading: isTokenURILoading,
+        refetch: refetchTokenURI,
+    } = useReadContract({
+        address: CONTRACT_ADDRESS,
+        abi: MarketNftContractABI,
+        functionName: "tokenURI",
+        args: [tokenId],
+        chainId: CHAIN_ID,
+    })
+
+    const {
+        data: fractionalSupply,
+        isLoading: isSupplyLoading,
+        refetch: refetchSupply,
+    } = useReadContract({
+        address: CONTRACT_ADDRESS,
+        abi: MarketNftContractABI,
+        functionName: "getFractionalSupply",
+        args: [tokenId],
+        chainId: CHAIN_ID,
+    })
+
+    const {
+        data: fractionalBalance,
+        isLoading: isBalanceLoading,
+        refetch: refetchBalance,
+    } = useReadContract({
+        address: CONTRACT_ADDRESS,
+        abi: MarketNftContractABI,
+        functionName: "getFractionalBalance",
+        args: [tokenId, account],
+        chainId: CHAIN_ID,
+        enabled: !!account,
+    })
+
+    // Force a refetch when isConfirmed changes to true
+    useEffect(() => {
+        if (isConfirmed) {
+            setShouldRefetch(true)
+        }
+    }, [isConfirmed])
+
+    // Perform the actual refetch
+    useEffect(() => {
+        if (shouldRefetch) {
+            console.log("Refetching token data for tokenId:", tokenId)
+            if (refetchTokenURI) refetchTokenURI()
+            if (refetchSupply) refetchSupply()
+            if (account && refetchBalance) refetchBalance()
+            setShouldRefetch(false)
+        }
+    }, [shouldRefetch, refetchTokenURI, refetchSupply, refetchBalance, tokenId, account])
+
+    return {
+        tokenURI,
+        fractionalSupply,
+        fractionalBalance,
+        isLoading: isTokenURILoading || isSupplyLoading || (!!account && isBalanceLoading),
+    }
+}
 
 export function useMarketNft() {
     // State for loading
     const [isPending, setIsPending] = useState(false)
 
     // Write contract functions
-    const { writeContract, isPending: isWritePending } = useWriteContract()
+    const { writeContract, isPending: isWritePending, data: hash } = useWriteContract()
 
-    const buyFraction = async (tokenId, amount, value) => {
-        setIsPending(true)
-
-        console.log("Attempting to buy fraction with params:", {
-            address: CONTRACT_ADDRESS,
-            functionName: "buyFraction",
-            args: [tokenId, amount],
-            chainId: CHAIN_ID,
-            value,
-        })
-
-        const result = await writeContract({
-            address: CONTRACT_ADDRESS,
-            abi: MarketNftContractABI,
-            functionName: "buyFraction",
-            args: [tokenId, amount],
-            chainId: CHAIN_ID,
-            value,
-        })
-
-        setIsPending(false)
-    }
-
-    const sellFraction = async (tokenId, amount) => {
-        setIsPending(true)
-        console.log("Attempting to sell fraction with params:", {
-            address: CONTRACT_ADDRESS,
-            functionName: "sellFraction",
-            args: [tokenId, amount],
-            chainId: CHAIN_ID,
-        })
-
-        const hash = await writeContract({
-            address: CONTRACT_ADDRESS,
-            abi: MarketNftContractABI,
-            functionName: "sellFraction",
-            args: [tokenId, amount],
-            chainId: CHAIN_ID,
-        })
-
-        setIsPending(false)
-    }
+    // Wait for transaction receipt
+    const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+        hash,
+        chainId: CHAIN_ID,
+    })
 
     // Read contract data
     const {
@@ -97,58 +127,56 @@ export function useMarketNft() {
         chainId: CHAIN_ID,
     })
 
-    // Function to create a hook for getting token data with a specific tokenId
-    const useTokenData = (tokenId, account) => {
-        const {
-            data: tokenURI,
-            isLoading: isTokenURILoading,
-            refetch: refetchTokenURI,
-        } = useReadContract({
-            address: CONTRACT_ADDRESS,
-            abi: MarketNftContractABI,
-            functionName: "tokenURI",
-            args: [tokenId],
-            chainId: CHAIN_ID,
-        })
+    // Refetch all data
+    const refetchAllData = useCallback(() => {
+        console.log("Refetching all contract data")
+        if (refetchTokenCounter) refetchTokenCounter()
+        if (refetchPrice) refetchPrice()
+        if (refetchBalance) refetchBalance()
+        if (refetchOwner) refetchOwner()
+    }, [refetchTokenCounter, refetchPrice, refetchBalance, refetchOwner])
 
-        const {
-            data: fractionalSupply,
-            isLoading: isSupplyLoading,
-            refetch: refetchSupply,
-        } = useReadContract({
-            address: CONTRACT_ADDRESS,
-            abi: MarketNftContractABI,
-            functionName: "getFractionalSupply",
-            args: [tokenId],
-            chainId: CHAIN_ID,
-        })
-
-        const {
-            data: fractionalBalance,
-            isLoading: isBalanceLoading,
-            refetch: refetchBalance,
-        } = useReadContract({
-            address: CONTRACT_ADDRESS,
-            abi: MarketNftContractABI,
-            functionName: "getFractionalBalance",
-            args: [tokenId, account],
-            chainId: CHAIN_ID,
-            enabled: !!account,
-        })
-
-        // Combined refetch function
-        const refetch = async () => {
-            if (refetchTokenURI) await refetchTokenURI()
-            if (refetchSupply) await refetchSupply()
-            if (account && refetchBalance) await refetchBalance()
+    // Refetch data when transaction is confirmed
+    useEffect(() => {
+        if (isConfirmed) {
+            console.log("Transaction confirmed, refreshing data")
+            refetchAllData()
+            setIsPending(false)
         }
+    }, [isConfirmed, refetchAllData])
 
-        return {
-            tokenURI,
-            fractionalSupply,
-            fractionalBalance,
-            isLoading: isTokenURILoading || isSupplyLoading || (!!account && isBalanceLoading),
-            refetch,
+    const buyFraction = async (tokenId, amount, value) => {
+        setIsPending(true)
+        try {
+            await writeContract({
+                address: CONTRACT_ADDRESS,
+                abi: MarketNftContractABI,
+                functionName: "buyFraction",
+                args: [tokenId, amount],
+                chainId: CHAIN_ID,
+                value,
+            })
+            // Refetching will be handled by the useEffect
+        } catch (error) {
+            console.error("Error buying fraction:", error)
+            setIsPending(false)
+        }
+    }
+
+    const sellFraction = async (tokenId, amount) => {
+        setIsPending(true)
+        try {
+            await writeContract({
+                address: CONTRACT_ADDRESS,
+                abi: MarketNftContractABI,
+                functionName: "sellFraction",
+                args: [tokenId, amount],
+                chainId: CHAIN_ID,
+            })
+            // Refetching will be handled by the useEffect
+        } catch (error) {
+            console.error("Error selling fraction:", error)
+            setIsPending(false)
         }
     }
 
@@ -157,16 +185,16 @@ export function useMarketNft() {
         price: priceData || 0n,
         balance: contractBalance || 0n,
         ownerAddress,
-        isPending,
-        isLoading: isTokenCounterLoading || isPriceLoading || isBalanceLoading || isOwnerLoading,
-        useTokenData,
+        isPending: isPending || isWritePending || isConfirming,
+        isLoading:
+            isTokenCounterLoading ||
+            isPriceLoading ||
+            isBalanceLoading ||
+            isOwnerLoading ||
+            isConfirming,
+        isConfirmed,
         buyFraction,
         sellFraction,
-        refetchData: {
-            refetchTokenCounter,
-            refetchPrice,
-            refetchBalance,
-            refetchOwner,
-        },
+        refetchAllData,
     }
 }

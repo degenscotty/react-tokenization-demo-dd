@@ -1,12 +1,14 @@
-import React, { useState, useEffect, useCallback } from "react"
+import React, { useState, useEffect } from "react"
 import { useTheme } from "../context/ThemeContext"
 import { useMarketNft } from "../hooks/useMarketNft"
+import { useTokenData } from "../hooks/useMarketNft"
 import PopSkullyImage from "../image/PopSkully_Tag_PP.jpg"
 import { useAccount } from "wagmi"
 
 function MainContent() {
     const { colors } = useTheme()
-    const { tokenCounter, isPending, price, buyFraction, sellFraction } = useMarketNft()
+    const { tokenCounter, isPending, price, buyFraction, sellFraction, isConfirmed } =
+        useMarketNft()
     const { address } = useAccount()
 
     const [nftData, setNftData] = useState({
@@ -20,21 +22,19 @@ function MainContent() {
         userBalance: 0,
         percentage: 0,
     })
-
     const [loading, setLoading] = useState(true)
     const [quantity, setQuantity] = useState(1)
 
     // We'll load the first NFT (tokenId 0) by default, if any exist
     const tokenId = 0
 
-    // Use the tokenData hook directly from useMarketNft
+    // Use the separate useTokenData hook directly
     const {
         tokenURI,
         fractionalSupply,
         fractionalBalance,
         isLoading: isTokenDataLoading,
-        refetch: refetchTokenData,
-    } = useMarketNft().useTokenData(tokenId, address)
+    } = useTokenData(tokenId, address, isConfirmed)
 
     // Calculate max available based on fractional data
     const maxAvailable = fractionalData.supply - fractionalData.userBalance
@@ -46,68 +46,46 @@ function MainContent() {
         }
     }
 
-    // Function to handle post-transaction updates
-    const handlePostTransaction = useCallback(async () => {
-        if (refetchTokenData) {
-            await refetchTokenData()
-            fetchNftData()
-        }
-    }, [refetchTokenData])
-
-    const fetchNftData = useCallback(async () => {
-        if (tokenId === null) return
-
-        try {
-            setLoading(true)
-
-            // Calculate percentage
-            const supply = fractionalSupply ? Number(fractionalSupply) : 0
-            const userBalance = fractionalBalance ? Number(fractionalBalance) : 0
-            const percentage = supply > 0 ? (userBalance * 100) / supply : 0
-
-            setFractionalData({
-                supply,
-                userBalance,
-                percentage: Math.round(percentage),
-            })
-
-            // Parse the metadata from tokenURI
-            if (tokenURI) {
-                try {
-                    // This assumes the tokenURI is in the format: data:application/json;base64,<base64-data>
-                    const jsonString = atob(tokenURI.split(",")[1])
-                    const metadata = JSON.parse(jsonString)
-
-                    setNftData({
-                        name: metadata.name || "Unnamed NFT",
-                        description: metadata.description || "No description available",
-                        location: metadata.location || "No location specified",
-                        image: metadata.image || "",
-                    })
-                } catch (error) {
-                    console.error("Error parsing token metadata:", error)
-                }
-            }
-        } catch (error) {
-            console.error("Error fetching NFT data:", error)
-        } finally {
-            setLoading(false)
-        }
-    }, [tokenId, tokenURI, fractionalSupply, fractionalBalance])
-
+    // Effect to update NFT data when token data changes
     useEffect(() => {
         if (!isTokenDataLoading && tokenURI) {
-            fetchNftData()
+            setLoading(true)
+            try {
+                // Calculate percentage
+                const supply = fractionalSupply ? Number(fractionalSupply) : 0
+                const userBalance = fractionalBalance ? Number(fractionalBalance) : 0
+                const percentage = supply > 0 ? (userBalance * 100) / supply : 0
+
+                setFractionalData({
+                    supply,
+                    userBalance,
+                    percentage: Math.round(percentage),
+                })
+
+                // Parse the metadata from tokenURI
+                if (tokenURI) {
+                    try {
+                        // This assumes the tokenURI is in the format: data:application/json;base64,<base64-data>
+                        const jsonString = atob(tokenURI.split(",")[1])
+                        const metadata = JSON.parse(jsonString)
+
+                        setNftData({
+                            name: metadata.name || "Unnamed NFT",
+                            description: metadata.description || "No description available",
+                            location: metadata.location || "No location specified",
+                            image: metadata.image || "",
+                        })
+                    } catch (error) {
+                        console.error("Error parsing token metadata:", error)
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching NFT data:", error)
+            } finally {
+                setLoading(false)
+            }
         }
-    }, [
-        tokenId,
-        tokenURI,
-        fractionalSupply,
-        fractionalBalance,
-        isTokenDataLoading,
-        address,
-        fetchNftData,
-    ])
+    }, [tokenURI, fractionalSupply, fractionalBalance, isTokenDataLoading])
 
     // Reset quantity when maxAvailable changes
     useEffect(() => {
@@ -115,6 +93,13 @@ function MainContent() {
             setQuantity(Math.max(1, maxAvailable))
         }
     }, [maxAvailable, quantity])
+
+    // Log when transactions are confirmed (for debugging)
+    useEffect(() => {
+        if (isConfirmed) {
+            console.log("MainContent: Transaction confirmed, data should refresh")
+        }
+    }, [isConfirmed])
 
     return (
         <div
@@ -212,13 +197,8 @@ function MainContent() {
                                     transition: "transform 0.15s",
                                 }}
                                 className="text-white font-bold p-2 rounded w-full hover:scale-105"
-                                onClick={async () => {
-                                    console.log("Buy button clicked", { tokenId, price, quantity })
-                                    const hash = await buyFraction(
-                                        tokenId,
-                                        quantity,
-                                        price * window.BigInt(quantity),
-                                    )
+                                onClick={() => {
+                                    buyFraction(tokenId, quantity, price * window.BigInt(quantity))
                                 }}
                                 disabled={
                                     loading ||
@@ -236,12 +216,7 @@ function MainContent() {
                                     transition: "transform 0.15s",
                                 }}
                                 className="text-white font-bold p-2 rounded w-full hover:scale-105"
-                                onClick={async () => {
-                                    console.log("Sell button clicked", {
-                                        tokenId,
-                                        fractionalData,
-                                        quantity,
-                                    })
+                                onClick={() => {
                                     sellFraction(tokenId, quantity)
                                 }}
                                 disabled={
@@ -258,6 +233,12 @@ function MainContent() {
                     </div>
                 </div>
             </div>
+
+            {isPending && (
+                <div className="mt-4 text-sm text-gray-600">
+                    Transaction in progress... waiting for confirmation
+                </div>
+            )}
         </div>
     )
 }
