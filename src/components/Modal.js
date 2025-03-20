@@ -1,7 +1,7 @@
 import React from "react"
 import { useTheme } from "../context/ThemeContext"
 
-const Modal = ({ isOpen, onClose, onSubmit, formData, handleInputChange }) => {
+const Modal = ({ isOpen, onClose, onSubmit, formData, handleInputChange, isSubmitting }) => {
     const { colors } = useTheme()
 
     if (!isOpen) return null
@@ -117,6 +117,26 @@ const Modal = ({ isOpen, onClose, onSubmit, formData, handleInputChange }) => {
                             required
                         />
                     </div>
+                    <div className="mb-3">
+                        <input
+                            type="number"
+                            name="fractions"
+                            placeholder="Number of Fractions"
+                            value={formData.fractions}
+                            onChange={handleInputChange}
+                            style={{
+                                width: "100%",
+                                padding: "10px",
+                                marginBottom: "10px",
+                                borderRadius: "5px",
+                                border: `1px solid ${colors.accent}`,
+                                backgroundColor: colors.background,
+                                color: colors.text,
+                            }}
+                            required
+                            min="1"
+                        />
+                    </div>
                     <div className="flex space-x-2 mt-4">
                         <button
                             type="submit"
@@ -126,12 +146,14 @@ const Modal = ({ isOpen, onClose, onSubmit, formData, handleInputChange }) => {
                                 padding: "10px 15px",
                                 borderRadius: "5px",
                                 border: "none",
-                                cursor: "pointer",
+                                cursor: isSubmitting ? "not-allowed" : "pointer",
                                 transition: "transform 0.15s",
+                                opacity: isSubmitting ? 0.7 : 1,
                             }}
                             className="hover:scale-105"
+                            disabled={isSubmitting}
                         >
-                            Create NFT
+                            {isSubmitting ? "Creating..." : "Create NFT"}
                         </button>
                         <button
                             onClick={onClose}
@@ -142,10 +164,12 @@ const Modal = ({ isOpen, onClose, onSubmit, formData, handleInputChange }) => {
                                 padding: "10px 15px",
                                 borderRadius: "5px",
                                 border: "none",
-                                cursor: "pointer",
+                                cursor: isSubmitting ? "not-allowed" : "pointer",
                                 transition: "transform 0.15s",
+                                opacity: isSubmitting ? 0.7 : 1,
                             }}
                             className="hover:scale-105"
+                            disabled={isSubmitting}
                         >
                             Cancel
                         </button>

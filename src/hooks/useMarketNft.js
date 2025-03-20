@@ -180,6 +180,23 @@ export function useMarketNft() {
         }
     }
 
+    const mintNft = async (name, description, location, imageUri, fractions) => {
+        setIsPending(true)
+        try {
+            await writeContract({
+                address: CONTRACT_ADDRESS,
+                abi: MarketNftContractABI,
+                functionName: "mintNft",
+                args: [name, description, location, imageUri, fractions],
+                chainId: CHAIN_ID,
+            })
+            // Refetching will be handled by the useEffect
+        } catch (error) {
+            console.error("Error minting NFT:", error)
+            setIsPending(false)
+        }
+    }
+
     return {
         tokenCounter: tokenCounter ? Number(tokenCounter) : 0,
         price: priceData || 0n,
@@ -195,6 +212,7 @@ export function useMarketNft() {
         isConfirmed,
         buyFraction,
         sellFraction,
+        mintNft,
         refetchAllData,
     }
 }

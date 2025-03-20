@@ -7,7 +7,8 @@ import { useModal } from "./context/ModalContext"
 
 // Wrapper component that uses the modal context
 const AppContent = () => {
-    const { isModalOpen, closeModal, formData, handleInputChange, handleSubmit } = useModal()
+    const { isModalOpen, closeModal, formData, handleInputChange, handleSubmit, isSubmitting } =
+        useModal()
 
     return (
         <div className="App">
@@ -19,6 +20,7 @@ const AppContent = () => {
                 onSubmit={handleSubmit}
                 formData={formData}
                 handleInputChange={handleInputChange}
+                isSubmitting={isSubmitting}
             />
         </div>
     )

@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react"
 import { useTheme } from "../context/ThemeContext"
 import { useMarketNft } from "../hooks/useMarketNft"
-import { useTokenData } from "../hooks/useMarketNft"
-import PopSkullyImage from "../image/PopSkully_Tag_PP.jpg"
 import { useAccount } from "wagmi"
+import NFTItem from "./NFTItem"
 
 function MainContent() {
     const { colors } = useTheme()
@@ -11,88 +10,20 @@ function MainContent() {
         useMarketNft()
     const { address } = useAccount()
 
-    const [nftData, setNftData] = useState({
-        name: "Loading...",
-        description: "Loading...",
-        location: "Loading...",
-        image: "",
-    })
-    const [fractionalData, setFractionalData] = useState({
-        supply: 0,
-        userBalance: 0,
-        percentage: 0,
-    })
-    const [loading, setLoading] = useState(true)
-    const [quantity, setQuantity] = useState(1)
+    // State to store available tokenIds
+    const [tokenIds, setTokenIds] = useState([])
 
-    // We'll load the first NFT (tokenId 0) by default, if any exist
-    const tokenId = 0
-
-    // Use the separate useTokenData hook directly
-    const {
-        tokenURI,
-        fractionalSupply,
-        fractionalBalance,
-        isLoading: isTokenDataLoading,
-    } = useTokenData(tokenId, address, isConfirmed)
-
-    // Calculate max available based on fractional data
-    const maxAvailable = fractionalData.supply - fractionalData.userBalance
-
-    const handleBuyQuantityChange = (e) => {
-        const value = parseInt(e.target.value)
-        if (!isNaN(value) && value >= 1 && value <= maxAvailable) {
-            setQuantity(value)
-        }
-    }
-
-    // Effect to update NFT data when token data changes
+    // Effect to get token IDs from tokenCounter
     useEffect(() => {
-        if (!isTokenDataLoading && tokenURI) {
-            setLoading(true)
-            try {
-                // Calculate percentage
-                const supply = fractionalSupply ? Number(fractionalSupply) : 0
-                const userBalance = fractionalBalance ? Number(fractionalBalance) : 0
-                const percentage = supply > 0 ? (userBalance * 100) / supply : 0
-
-                setFractionalData({
-                    supply,
-                    userBalance,
-                    percentage: Math.round(percentage),
-                })
-
-                // Parse the metadata from tokenURI
-                if (tokenURI) {
-                    try {
-                        // This assumes the tokenURI is in the format: data:application/json;base64,<base64-data>
-                        const jsonString = atob(tokenURI.split(",")[1])
-                        const metadata = JSON.parse(jsonString)
-
-                        setNftData({
-                            name: metadata.name || "Unnamed NFT",
-                            description: metadata.description || "No description available",
-                            location: metadata.location || "No location specified",
-                            image: metadata.image || "",
-                        })
-                    } catch (error) {
-                        console.error("Error parsing token metadata:", error)
-                    }
-                }
-            } catch (error) {
-                console.error("Error fetching NFT data:", error)
-            } finally {
-                setLoading(false)
+        if (tokenCounter !== undefined) {
+            // Create an array from 0 to tokenCounter-1 for all available NFTs
+            const count = Number(tokenCounter)
+            if (count > 0) {
+                const ids = Array.from({ length: count }, (_, i) => i)
+                setTokenIds(ids)
             }
         }
-    }, [tokenURI, fractionalSupply, fractionalBalance, isTokenDataLoading])
-
-    // Reset quantity when maxAvailable changes
-    useEffect(() => {
-        if (quantity > maxAvailable) {
-            setQuantity(Math.max(1, maxAvailable))
-        }
-    }, [maxAvailable, quantity])
+    }, [tokenCounter])
 
     // Log when transactions are confirmed (for debugging)
     useEffect(() => {
@@ -113,126 +44,25 @@ function MainContent() {
             }}
             className="main-content flex flex-col items-center justify-center"
         >
-            <div className="flex space-x-4 w-full">
-                <div
-                    style={{ backgroundColor: colors.backgroundLight }}
-                    className="flex-2 w-2/3 p-4 rounded-md shadow flex items-center"
-                >
-                    {loading ? (
-                        <div className="w-1/3 h-64 bg-gray-200 animate-pulse rounded-md mr-4"></div>
-                    ) : (
-                        <img
-                            src={nftData.image || PopSkullyImage}
-                            style={{
-                                borderRadius: "10px",
-                                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-                            }}
-                            alt={nftData.name}
-                            className="w-1/3 h-auto mr-4"
-                        />
-                    )}
-                    <div>
-                        <h2 style={{ color: colors.text }} className="text-lg font-bold">
-                            Name
-                        </h2>
-                        <p style={{ color: colors.text }} className="text-gray-600">
-                            {nftData.name}
-                        </p>
-                        <h2 style={{ color: colors.text }} className="text-lg font-bold">
-                            Description
-                        </h2>
-                        <p style={{ color: colors.text }} className="text-gray-600">
-                            {nftData.description}
-                        </p>
-                        <h2 style={{ color: colors.text }} className="text-lg font-bold">
-                            Location
-                        </h2>
-                        <p style={{ color: colors.text }} className="text-gray-600">
-                            {nftData.location}
-                        </p>
-                    </div>
+            {tokenIds.length === 0 ? (
+                <div style={{ color: colors.text }} className="text-center p-8">
+                    No NFTs available to display
                 </div>
-                <div
-                    style={{ backgroundColor: colors.backgroundLight, color: colors.text }}
-                    className="flex-1 w-1/3 p-4 rounded-md shadow flex flex-col"
-                >
-                    <h2 style={{ color: colors.text }} className="text-lg font-bold">
-                        Sales Information
-                    </h2>
-                    <div
-                        className="w-full h-1.5 rounded-full"
-                        style={{
-                            backgroundColor: colors.background,
-                        }}
-                    >
-                        <div
-                            className="h-1.5 rounded-full"
-                            style={{
-                                backgroundColor: colors.accent,
-                                width: `${fractionalData.percentage}%`,
-                            }}
-                        ></div>
-                    </div>
-                    <h2 style={{ color: colors.text }} className="text-sm">
-                        {fractionalData.userBalance} / {fractionalData.supply}
-                    </h2>
-                    <div className="mt-auto w-full flex flex-col space-y-2">
-                        <input
-                            type="number"
-                            min="1"
-                            max={maxAvailable}
-                            value={quantity}
-                            onChange={handleBuyQuantityChange}
-                            className="w-full px-2 py-1 rounded text-center text-sm no-spinner mb-2"
-                            style={{
-                                backgroundColor: colors.background,
-                                color: colors.text,
-                                border: `1px solid ${colors.border}`,
-                            }}
-                        />
-                        <div className="flex space-x-2">
-                            <button
-                                style={{
-                                    backgroundColor: colors.green,
-                                    transition: "transform 0.15s",
-                                }}
-                                className="text-white font-bold p-2 rounded w-full hover:scale-105"
-                                onClick={() => {
-                                    buyFraction(tokenId, quantity, price * window.BigInt(quantity))
-                                }}
-                                disabled={
-                                    loading ||
-                                    tokenId === null ||
-                                    tokenId === undefined ||
-                                    isPending ||
-                                    maxAvailable <= 0
-                                }
-                            >
-                                BUY
-                            </button>
-                            <button
-                                style={{
-                                    backgroundColor: colors.red,
-                                    transition: "transform 0.15s",
-                                }}
-                                className="text-white font-bold p-2 rounded w-full hover:scale-105"
-                                onClick={() => {
-                                    sellFraction(tokenId, quantity)
-                                }}
-                                disabled={
-                                    loading ||
-                                    tokenId === null ||
-                                    tokenId === undefined ||
-                                    fractionalData.userBalance < quantity ||
-                                    isPending
-                                }
-                            >
-                                SELL
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            ) : (
+                tokenIds.map((tokenId) => (
+                    <NFTItem
+                        key={tokenId}
+                        tokenId={tokenId}
+                        address={address}
+                        colors={colors}
+                        isConfirmed={isConfirmed}
+                        isPending={isPending}
+                        price={price}
+                        buyFraction={buyFraction}
+                        sellFraction={sellFraction}
+                    />
+                ))
+            )}
 
             {isPending && (
                 <div className="mt-4 text-sm text-gray-600">
