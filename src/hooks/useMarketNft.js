@@ -1,4 +1,4 @@
-import { useReadContract, useWriteContract, waitForTransactionReceipt } from "wagmi"
+import { useReadContract, useWriteContract } from "wagmi"
 import { MarketNftContractABI, CONTRACT_ADDRESS, CHAIN_ID } from "../contract/contractConfig"
 import { useState } from "react"
 
@@ -20,22 +20,20 @@ export function useMarketNft() {
             value,
         })
 
-        writeContract({
+        const result = await writeContract({
             address: CONTRACT_ADDRESS,
             abi: MarketNftContractABI,
             functionName: "buyFraction",
             args: [tokenId, amount],
             chainId: CHAIN_ID,
             value,
-            onSuccess: async (hash) => {
-                console.log("Transaction submitted with hash:", hash)
-            },
         })
+
+        setIsPending(false)
     }
 
     const sellFraction = async (tokenId, amount) => {
         setIsPending(true)
-
         console.log("Attempting to sell fraction with params:", {
             address: CONTRACT_ADDRESS,
             functionName: "sellFraction",
@@ -43,16 +41,15 @@ export function useMarketNft() {
             chainId: CHAIN_ID,
         })
 
-        writeContract({
+        const hash = await writeContract({
             address: CONTRACT_ADDRESS,
             abi: MarketNftContractABI,
             functionName: "sellFraction",
             args: [tokenId, amount],
             chainId: CHAIN_ID,
-            onSuccess: async (hash) => {
-                console.log("Transaction submitted with hash:", hash)
-            },
         })
+
+        setIsPending(false)
     }
 
     // Read contract data

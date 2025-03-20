@@ -20,6 +20,7 @@ function MainContent() {
         userBalance: 0,
         percentage: 0,
     })
+
     const [loading, setLoading] = useState(true)
     const [quantity, setQuantity] = useState(1)
 
@@ -213,7 +214,11 @@ function MainContent() {
                                 className="text-white font-bold p-2 rounded w-full hover:scale-105"
                                 onClick={async () => {
                                     console.log("Buy button clicked", { tokenId, price, quantity })
-                                    buyFraction(tokenId, quantity, price * window.BigInt(quantity))
+                                    const hash = await buyFraction(
+                                        tokenId,
+                                        quantity,
+                                        price * window.BigInt(quantity),
+                                    )
                                 }}
                                 disabled={
                                     loading ||
