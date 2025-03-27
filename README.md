@@ -1,3 +1,10 @@
+![Alt text](./image/tag.jpg)
+
+<div style="display: flex; justify-content: space-between;">
+  <img src="./image/lightmode.png" width="48%" alt="Light Mode Screenshot">
+  <img src="./image/darkmode.png" width="48%" alt="Dark Mode Screenshot">
+</div>
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).

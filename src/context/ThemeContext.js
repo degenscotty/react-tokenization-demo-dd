@@ -3,31 +3,43 @@ import React, { createContext, useContext, useState, useEffect } from "react"
 const ThemeContext = createContext()
 
 const darkThemeColors = {
-    background: "rgba(10, 10, 18, 1)", // Darker background for better contrast
-    backgroundLight: "rgba(28, 28, 38, 1)", // Slightly lighter for components
-    backgroundDark: "rgba(18, 18, 28, 1)", // Darker variant for certain elements
-    text: "rgba(240, 240, 250, 1)", // Brighter white for better readability
-    textSecondary: "rgba(180, 180, 210, 1)", // Secondary text color
-    accent: "rgba(88, 130, 252, 1)", // Vibrant blue accent
-    accentHover: "rgba(100, 145, 255, 1)", // Lighter accent for hover states
-    red: "rgba(255, 85, 100, 1)", // Vivid crimson red
-    green: "rgba(50, 200, 120, 1)", // Bright mint green
-    border: "rgba(70, 70, 90, 1)", // More visible border color
-    cardBg: "rgba(35, 35, 45, 1)", // Specific card background
+    background: "#121212",
+    backgroundSecondary: "#1E1E1E",
+    backgroundLight: "#1E1E1E",
+    backgroundDark: "#0A0A0A",
+    text: "#FFFFFF",
+    textSecondary: "#AAAAAA",
+    accent: "#FFB800",
+    accentHover: "#FFC733",
+    border: "#2A2A2A",
+    button: "#1E1E1E",
+    buttonHover: "#2A2A2A",
+    green: "#4ADE80",
+    red: "#FF4C4C",
+    cardBg: "#1E1E1E",
+    cardHighlight: "#2A2A2A",
+    glass: "rgba(30, 30, 30, 0.6)",
+    shadow: "0 10px 30px rgba(0, 0, 0, 0.3)",
 }
 
 const lightThemeColors = {
-    background: "rgba(247, 248, 252, 1)", // Crisp light background
-    backgroundLight: "rgba(255, 255, 255, 1)", // White for components
-    backgroundDark: "rgba(240, 242, 250, 1)", // Slightly darker for certain elements
-    text: "rgba(20, 22, 36, 1)", // Dark text for better contrast
-    textSecondary: "rgba(80, 82, 100, 1)", // Secondary text color
-    accent: "rgba(32, 90, 220, 1)", // Deeper blue for better visibility
-    accentHover: "rgba(40, 100, 230, 1)", // Hover state for accent
-    red: "rgba(220, 60, 80, 1)", // Bold red
-    green: "rgba(30, 160, 90, 1)", // Rich emerald green
-    border: "rgba(210, 215, 230, 1)", // More visible border color
-    cardBg: "rgba(252, 253, 255, 1)", // Specific card background
+    background: "#EFE6D9", // Light beige/tan background from the image
+    backgroundSecondary: "#F5F0E8", // Slightly lighter beige for secondary backgrounds
+    backgroundLight: "#FFFFFF",
+    backgroundDark: "#E5DCD0",
+    text: "#8C583C", // Brown text color for main content
+    textSecondary: "#A67B60", // Lighter brown for secondary text
+    accent: "#EE952A", // Reddish-brown accent color from the Foundation branding
+    accentHover: "#F3A84C", // Lighter version of accent for hover states
+    border: "#D3C5B6", // Light brown border color
+    button: "#B27553", // Button background color like the "Trade Now" button
+    buttonHover: "#96532A", // Darker brown for button hover state
+    green: "#6A8D73", // Earthy green that matches the theme
+    red: "#C25D45", // Earthy red that matches the theme
+    cardBg: "#F5F0E8", // Same as backgroundSecondary
+    cardHighlight: "#FFFFFF", // White highlight for cards
+    glass: "rgba(245, 240, 232, 0.7)", // Semi-transparent version of backgroundSecondary
+    shadow: "0 10px 25px rgba(140, 88, 60, 0.1)", // Shadow using text color with low opacity
 }
 
 export function ThemeProvider({ children }) {
@@ -46,6 +58,13 @@ export function ThemeProvider({ children }) {
         // Add a class to the document body to help with global styling
         document.body.classList.toggle("dark-theme", isDarkMode)
         document.body.classList.toggle("light-theme", !isDarkMode)
+
+        // Add smooth transitions to all elements
+        document.documentElement.style.setProperty("--transition-speed", "0.3s")
+        document.documentElement.style.setProperty(
+            "--transition-timing",
+            "cubic-bezier(0.4, 0, 0.2, 1)",
+        )
     }, [isDarkMode])
 
     const toggleDarkMode = () => setIsDarkMode((prev) => !prev)

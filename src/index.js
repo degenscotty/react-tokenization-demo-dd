@@ -13,8 +13,78 @@ import reportWebVitals from "./reportWebVitals"
 function RainbowKitThemeWrapper({ children }) {
     const { isDarkMode, colors } = useTheme()
 
+    // Complete custom theme implementation
+    const myCustomTheme = {
+        blurs: {
+            modalOverlay: isDarkMode ? "8px" : "4px",
+        },
+        colors: {
+            accentColor: colors.accent,
+            accentColorForeground: isDarkMode ? "#000000" : "#FFFFFF",
+            actionButtonBorder: colors.border,
+            actionButtonBorderMobile: colors.border,
+            actionButtonSecondaryBackground: colors.backgroundSecondary,
+            closeButton: colors.textSecondary,
+            closeButtonBackground: colors.backgroundSecondary,
+            connectButtonBackground: colors.backgroundSecondary,
+            connectButtonBackgroundError: "#FF494A",
+            connectButtonInnerBackground: colors.backgroundSecondary,
+            connectButtonText: colors.text,
+            connectButtonTextError: "#FFFFFF",
+            connectionIndicator: colors.accent,
+            downloadBottomCardBackground: colors.backgroundSecondary,
+            downloadTopCardBackground: colors.background,
+            error: "#FF494A",
+            generalBorder: colors.border,
+            generalBorderDim: colors.border,
+            menuItemBackground: colors.button,
+            modalBackdrop: isDarkMode ? "rgba(0, 0, 0, 0.5)" : "rgba(0, 0, 0, 0.3)",
+            modalBackground: colors.background,
+            modalBorder: colors.border,
+            modalText: colors.text,
+            modalTextDim: colors.textSecondary,
+            modalTextSecondary: colors.textSecondary,
+            profileAction: colors.backgroundSecondary,
+            profileActionHover: colors.buttonHover,
+            profileForeground: colors.background,
+            selectedOptionBorder: colors.accent,
+            standby: isDarkMode ? "#FFB800" : "#3B82F6",
+        },
+        fonts: {
+            body: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"',
+        },
+        radii: {
+            actionButton: "8px",
+            connectButton: "8px",
+            menuButton: "8px",
+            modal: "12px",
+            modalMobile: "12px",
+        },
+        shadows: {
+            connectButton: isDarkMode
+                ? "0px 4px 12px rgba(0, 0, 0, 0.1)"
+                : "0px 4px 12px rgba(0, 0, 0, 0.05)",
+            dialog: isDarkMode
+                ? "0px 8px 32px rgba(0, 0, 0, 0.32)"
+                : "0px 8px 32px rgba(0, 0, 0, 0.08)",
+            profileDetailsAction: isDarkMode
+                ? "0px 2px 6px rgba(0, 0, 0, 0.24)"
+                : "0px 2px 6px rgba(0, 0, 0, 0.06)",
+            selectedOption: isDarkMode
+                ? "0px 2px 6px rgba(0, 0, 0, 0.24)"
+                : "0px 2px 6px rgba(0, 0, 0, 0.06)",
+            selectedWallet: isDarkMode
+                ? "0px 2px 6px rgba(0, 0, 0, 0.24)"
+                : "0px 2px 6px rgba(0, 0, 0, 0.06)",
+            walletLogo: isDarkMode
+                ? "0px 2px 6px rgba(0, 0, 0, 0.24)"
+                : "0px 2px 6px rgba(0, 0, 0, 0.06)",
+        },
+    }
+
     return (
         <RainbowKitProvider
+            theme={myCustomTheme}
             coolMode
             modalSize="compact"
             showRecentTransactions={false}

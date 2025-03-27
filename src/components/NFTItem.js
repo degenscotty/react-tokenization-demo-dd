@@ -89,7 +89,7 @@ const NFTItem = ({
 
     return (
         <div
-            className="grid grid-cols-1 lg:grid-cols-3 gap-4 transition-all duration-300 transform hover:translate-y-[-4px]"
+            className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10 transition-all duration-300 transform hover:translate-y-[-4px]"
             style={{
                 opacity: loading ? 0.8 : 1,
             }}
